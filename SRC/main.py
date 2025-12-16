@@ -1,63 +1,59 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from huggingface_hub import hf_hub_download
 
-# Load the saved data
-try:
-    df = joblib.load('df_cleaned.pkl')
-except:
-    st.error("❌ Could not load data. Please run preprocess.py first!")
-    st.stop()
-
-def recommend_songs(song_title):
+# Load data from HuggingFace instead of local files
+@st.cache_resource
+def load_data():
     try:
-        # Load similarity matrix
-        cosine_sim = joblib.load('cosine_sim.pkl')
-        
-        # Get the index of the song
-        idx = df[df['song'] == song_title].index[0]
-        
-        # Get similarity scores
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:6]  # Top 5 songs
-        
-        # Get song indices
-        song_indices = [i[0] for i in sim_scores]
-        
-        # Return recommended songs
-        return pd.DataFrame({
-            'Song': df['song'].iloc[song_indices],
-            'Artist': df['artist'].iloc[song_indices]
-        })
+        df_path = hf_hub_download(
+            repo_id="Samacker25/music-recemmondation-data",
+            filename="df_cleaned.pkl",
+            repo_type="dataset"
+        )
+
+        cosine_path = hf_hub_download(
+            repo_id="Samacker25/music-recemmondation-data",
+            filename="cosine_sim.pkl",
+            repo_type="dataset"
+        )
+
+        df = joblib.load(df_path)
+        cosine_sim = joblib.load(cosine_path)
+
+        return df, cosine_sim
     except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return None
+        st.error(f"❌ Failed to load data: {str(e)}")
+        st.stop()
 
-# Set page config
-st.set_page_config(
-    page_title="Music Recommender 🎵",
-    page_icon="🎧",
-    layout="centered"
-)
+df, cosine_sim = load_data()
 
-
-
+# UI Section
+st.set_page_config(page_title="Music Recommender 🎵", layout="centered")
 st.title("🎶 Music Recommender")
-
-# Add description
 st.write("Select a song to get similar music recommendations!")
 
-# Create song selector
 song_list = sorted(df['song'].dropna().unique())
 selected_song = st.selectbox("🎵 Choose a song:", song_list)
+
+def recommend_songs(song_title):
+    idx = df[df['song'] == song_title].index[0]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:6]
+    song_indices = [i[0] for i in sim_scores]
+
+    return pd.DataFrame({
+        'Song': df['song'].iloc[song_indices],
+        'Artist': df['artist'].iloc[song_indices]
+    })
 
 if st.button("🚀 Get Recommendations"):
     with st.spinner("Finding similar songs..."):
         recommendations = recommend_songs(selected_song)
-        if recommendations is not None:
-            st.success("✨ Here are your recommendations:")
-            st.dataframe(recommendations)
+        st.success("✨ Here are your recommendations:")
+        st.dataframe(recommendations)
+
     
 def set_bg_from_url(url, opacity=1):
     
