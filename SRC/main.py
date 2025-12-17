@@ -3,6 +3,11 @@ import pandas as pd
 import joblib
 from huggingface_hub import hf_hub_download
 
+# UI Section
+st.set_page_config(page_title="Music Recommender 🎵", layout="centered")
+st.title("🎶 Music Recommender")
+st.write("Select a song to get similar music recommendations!")
+
 # Load data from HuggingFace instead of local files
 @st.cache_resource
 def load_data():
@@ -29,10 +34,7 @@ def load_data():
 
 df, cosine_sim = load_data()
 
-# UI Section
-st.set_page_config(page_title="Music Recommender 🎵", layout="centered")
-st.title("🎶 Music Recommender")
-st.write("Select a song to get similar music recommendations!")
+
 
 song_list = sorted(df['song'].dropna().unique())
 selected_song = st.selectbox("🎵 Choose a song:", song_list)
