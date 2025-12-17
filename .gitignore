@@ -1,0 +1,8 @@
+*.pkl
+*.csv
+*.zip
+SRC/df_cleaned.pkl
+SRC/cosine_sim.pkl
+SRC/spotify_millsongdata.csv
+SRC/spotify_millsongdata.csv
+/spotify_millsongdata.zip
