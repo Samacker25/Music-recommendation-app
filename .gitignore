@@ -6,3 +6,4 @@ SRC/cosine_sim.pkl
 SRC/spotify_millsongdata.csv
 SRC/spotify_millsongdata.csv
 /spotify_millsongdata.zip
+.venv/
